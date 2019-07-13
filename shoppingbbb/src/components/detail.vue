@@ -15,7 +15,7 @@
           <div class="left-925">
             <div class="goods-box clearfix">
               <div class="pic-box">
-                <img :src="goodsinfo.img_url" alt />
+                <img :src="picUrl" alt />
               </div>
               <div class="goods-spec">
                 <h1>{{goodsinfo.title}}</h1>
@@ -43,35 +43,14 @@
                     <dt>购买数量</dt>
                     <dd>
                       <div class="stock-box">
-                        <div class="el-input-number el-input-number--small">
-                          <span role="button" class="el-input-number__decrease is-disabled">
-                            <i class="el-icon-minus"></i>
-                          </span>
-                          <span role="button" class="el-input-number__increase">
-                            <i class="el-icon-plus"></i>
-                          </span>
-                          <div class="el-input el-input--small">
-                            <!---->
-                            <input
-                              autocomplete="off"
-                              size="small"
-                              type="text"
-                              rows="2"
-                              max="60"
-                              min="1"
-                              validateevent="true"
-                              class="el-input__inner"
-                              role="spinbutton"
-                              aria-valuemax="60"
-                              aria-valuemin="1"
-                              aria-valuenow="1"
-                              aria-disabled="false"
-                            />
-                            <!---->
-                            <!---->
-                            <!---->
-                          </div>
-                        </div>
+                        <!-- 饿了么ui计数器 -->
+                        <el-input-number
+                          v-model="num"
+                          @change="handleChange"
+                          :min="1"
+                          :max="10"
+                          label="描述文字"
+                        ></el-input-number>
                       </div>
                       <span class="stock-txt">
                         库存
@@ -97,16 +76,17 @@
                 style="position: static; top: 517px; width: 925px;"
               >
                 <ul>
+                  <!-- 切换索引 -->
                   <li>
-                    <a href="javascript:;" class="selected">商品介绍</a>
+                    <a href="javascript:;" @click="tabIndex=1" :class="{selected:tabIndex==1}">商品介绍</a>
                   </li>
                   <li>
-                    <a href="javascript:;">商品评论</a>
+                    <a href="javascript:;" @click="tabIndex=2" :class="{selected:tabIndex==2}">商品评论</a>
                   </li>
                 </ul>
               </div>
-              <div class="tab-content entry" style="display: block;" v-html="goodsinfo.content"></div>
-              <div class="tab-content" style="display: block;">
+              <div class="tab-content entry" v-html="goodsinfo.content" v-show="tabIndex==1"></div>
+              <div class="tab-content" v-show="tabIndex==2">
                 <div class="comment-box">
                   <div id="commentForm" name="commentForm" class="form-box">
                     <div class="avatar-box">
@@ -115,6 +95,7 @@
                     <div class="conn-box">
                       <div class="editor">
                         <textarea
+                          v-model="addcomment"
                           id="txtContent"
                           name="txtContent"
                           sucmsg=" "
@@ -124,53 +105,48 @@
                         <span class="Validform_checktip"></span>
                       </div>
                       <div class="subcon">
-                        <input
+                      <!-- 饿了么ui消息弹出框 -->
+                        <el-button :plain="true" name="submit" type="submit" @click="addcommentBtn">提交评论</el-button>
+                        <!-- <input
                           id="btnSubmit"
                           name="submit"
                           type="submit"
                           value="提交评论"
                           class="submit"
-                        />
+                          @click="addcommentBtn"
+                        />-->
                         <span class="Validform_checktip"></span>
                       </div>
                     </div>
                   </div>
                   <ul id="commentList" class="list-box">
+                    <!-- 用户评论区 -->
                     <p
                       style="margin: 5px 0px 15px 69px; line-height: 42px; text-align: center; border: 1px solid rgb(247, 247, 247);"
+                      v-if="commentsnum == 0"
                     >暂无评论，快来抢沙发吧！</p>
-                    <li>
+                    <li v-for="(item,index) in commentslist" :key="index">
                       <div class="avatar-box">
                         <i class="iconfont icon-user-full"></i>
                       </div>
                       <div class="inner-box">
                         <div class="info">
-                          <span>匿名用户</span>
-                          <span>2017/10/23 14:58:59</span>
+                          <span>{{item.user_name}}</span>
+                          <span>{{item.reply_time | formatTime('YYYY/MM/DD HH:mm:ss')}}</span>
                         </div>
-                        <p>testtesttest</p>
-                      </div>
-                    </li>
-                    <li>
-                      <div class="avatar-box">
-                        <i class="iconfont icon-user-full"></i>
-                      </div>
-                      <div class="inner-box">
-                        <div class="info">
-                          <span>匿名用户</span>
-                          <span>2017/10/23 14:59:36</span>
-                        </div>
-                        <p>很清晰调动单很清晰调动单</p>
+                        <p>{{item.content}}</p>
                       </div>
                     </li>
                   </ul>
-                  <div class="page-box" style="margin: 5px 0px 0px 62px;">
-                    <div id="pagination" class="digg">
-                      <span class="disabled">« 上一页</span>
-                      <span class="current">1</span>
-                      <span class="disabled">下一页 »</span>
-                    </div>
-                  </div>
+                  <!-- 饿了么评论分页 -->
+                  <el-pagination
+                    @current-change="handleCurrentChange"
+                    background
+                    layout="prev, pager, next"
+                    :total="commentsnum"
+                    class="pagings"
+                    :current-page="pageIndex"
+                  ></el-pagination>
                 </div>
               </div>
             </div>
@@ -182,7 +158,11 @@
                 <h4>推荐商品</h4>
                 <ul class="side-img-list">
                   <!-- 右侧热门商品推荐 -->
-                  <li v-for="(item,index) in hotgoodslist" :key="index">
+                  <li
+                    v-for="(item,index) in hotgoodslist"
+                    :key="index"
+                    @click.prevent="hotBtn(item.id)"
+                  >
                     <div class="img-box">
                       <a href="#/site/goodsinfo/90" class>
                         <img :src="item.img_url" />
@@ -205,29 +185,128 @@
 
 <script>
 export default {
-  name: "details",
+  name: "detail",
   data() {
     return {
+      // 切换索引
+      tabIndex: 1,
+      // 计数器
+      num: 1,
+      // 左侧商品图片
+      picUrl: "",
       // 商品详情
       goodsinfo: {},
       // 右侧热门商品推荐
-      hotgoodslist: []
+      hotgoodslist: [],
+      // 评论页码
+      pageIndex: 1,
+      // 评论页容量
+      pageSize: 10,
+      // 评论总数
+      commentsnum: 0,
+      // 用户评论
+      commentslist: [],
+      // 发表评论
+      addcomment: ""
     };
   },
+
+  methods: {
+    // 分页切换
+    handleCurrentChange(val) {
+      // console.log(val);
+      this.pageIndex = val;
+      this.comments();
+    },
+    // 计数器
+    handleChange() {
+      // console.log(value);
+    },
+    // 热门商品点击事件
+    hotBtn(id) {
+      // console.log(id);
+      this.$router.push(`/detail/${id}`);
+    },
+    // 封装商品详情请求
+    hotgoods() {
+      this.$axios
+        .get(`site/goods/getgoodsinfo/${this.$route.params.id}`)
+        .then(backData => {
+          console.log(backData);
+          this.picUrl = backData.data.message.imglist[0].original_path;
+          // 商品详情
+          this.goodsinfo = backData.data.message.goodsinfo;
+          // 右侧热门商品推荐
+          this.hotgoodslist = backData.data.message.hotgoodslist;
+        });
+    },
+    // 封装用户评论请求
+    comments() {
+      this.$axios
+        .get(
+          `site/comment/getbypage/goods/${this.$route.params.id}?pageIndex=${this.pageIndex}&pageSize=${this.pageSize}`
+        )
+        .then(backData => {
+          // console.log(backData);
+          // 用户评论
+          this.commentslist = backData.data.message;
+          // 评论总数
+          this.commentsnum = backData.data.totalcount;
+        });
+    },
+    // 封装发表评论
+    addcommentBtn() {
+      this.$axios
+        .post(`site/validate/comment/post/goods/${this.$route.params.id}`, {
+          commenttxt: this.addcomment
+        })
+        .then(backData => {
+          console.log(backData);
+          if (backData.status == 200) {
+            // 清空评论
+            this.addcomment = "";
+            // 发表评论弹出框
+            this.$message({
+              message: "发表成功!!!",
+              type: "success"
+            });
+            // 重新渲染评论区
+            this.comments();
+          }
+        });
+    }
+  },
+
+  // 监听器
+  watch: {
+    "$route.params.id"() {
+      // 重新获取商品详情数据
+      this.hotgoods();
+      // 分页重置
+      this.pageIndex = 1;
+      // 重新获取用户评论数据
+      this.comments();
+    }
+  },
+
   created() {
     // 商品详情请求
-    this.$axios
-      .get(`site/goods/getgoodsinfo/${this.$route.params.id}`)
-      .then(backData => {
-        console.log(backData);
-        // 商品详情
-        this.goodsinfo = backData.data.message.goodsinfo;
-        // 右侧热门商品推荐
-        this.hotgoodslist = backData.data.message.hotgoodslist;
-      });
+    this.hotgoods();
+    // 用户评论请求
+    this.comments();
   }
 };
 </script>
 
 <style>
+.tab-content img {
+  display: block;
+}
+.pagings {
+  margin-left: 240px;
+  margin-top: 60px;
+}
+.pic-box img {
+  height: 380px;
+}
 </style>

@@ -352,7 +352,7 @@ export default {
   methods: {
     // 顶部右侧分类导航
     hotCommodity(id){
-      this.$router.push(`/details/${id}`)
+      this.$router.push(`/detail/${id}`)
     }
   },
 };
