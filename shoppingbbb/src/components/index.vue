@@ -329,7 +329,7 @@ export default {
   created() {
     // 获取商品顶部的轮播图，分类导航数据
     this.$axios.get("site/goods/gettopdata/goods").then(backData => {
-      console.log(backData);
+      // console.log(backData);
       // 中间轮播图
       this.sliderlist = backData.data.message.sliderlist;
       // 右侧分类导航商品
@@ -338,7 +338,7 @@ export default {
 
     // 商品分类分组获取数据
     this.$axios.get("site/goods/getgoodsgroup").then(backData => {
-      console.log(backData);
+      // console.log(backData);
       // 分组手机数码商品
       this.digitallist = backData.data.message[0].datas;
       // 分组电脑办公商品
@@ -352,7 +352,7 @@ export default {
   methods: {
     // 顶部右侧分类导航
     hotCommodity(id){
-      this.$router.push(`/detail/${id}`)
+      this.$router.push('/user')
     }
   },
 };

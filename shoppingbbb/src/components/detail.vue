@@ -106,15 +106,15 @@
                       </div>
                       <div class="subcon">
                       <!-- 饿了么ui消息弹出框 -->
-                        <el-button :plain="true" name="submit" type="submit" @click="addcommentBtn">提交评论</el-button>
-                        <!-- <input
+                        <!-- <el-button :plain="true" name="submit" type="submit" @click="addcommentBtn">提交评论</el-button> -->
+                        <input
                           id="btnSubmit"
                           name="submit"
                           type="submit"
                           value="提交评论"
                           class="submit"
                           @click="addcommentBtn"
-                        />-->
+                        />
                         <span class="Validform_checktip"></span>
                       </div>
                     </div>
@@ -258,6 +258,7 @@ export default {
     addcommentBtn() {
       this.$axios
         .post(`site/validate/comment/post/goods/${this.$route.params.id}`, {
+          // 参数对象
           commenttxt: this.addcomment
         })
         .then(backData => {
